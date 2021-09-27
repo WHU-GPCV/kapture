@@ -16,7 +16,7 @@ from typing import Optional
 from PIL import Image
 from tqdm import tqdm
 # kapture
-import path_to_kapture  # noqa: F401
+# import path_to_kapture  # noqa: F401
 import kapture
 import kapture.utils.logging
 from kapture.io.structure import delete_existing_kapture_files
@@ -27,14 +27,6 @@ from kapture.utils.paths import path_secure
 
 logger = logging.getLogger('gpcv')
 MODEL = kapture.CameraType.PINHOLE
-
-# ????
-RGB_SENSOR_ID = 'aerial_rgb'
-BODY_SENSOR_ID = 'carrier'
-PARTITION_FILENAMES = {
-    'mapping': 'TrainSplit.txt',
-    'query': 'TestSplit.txt'
-}
 
 
 def get_camera_matrix(fx: float, fy: float, cx: float, cy: float):
@@ -56,7 +48,7 @@ def get_K(camera_type: kapture.CameraType, camera_params):
     else:
         return get_camera_matrix(camera_params[3], camera_params[4], camera_params[5], camera_params[5])
 
-def get_camera_param(type:str, line:str) -> List:
+def get_camera_param(type:str, line:str):
 
     if type == "PINHOLE":
         params_item = line.split(' ')
@@ -76,25 +68,25 @@ def get_camera_param(type:str, line:str) -> List:
 
         return [cam_id, kapture.CameraType.PINHOLE, [width, height, fx, fy, cx, cy]]
     
-def load_sensor_and_rigid(path: str) -> List:
+def load_sensor_and_rigid(path: str):
     sensors = kapture.Sensors()
     rigs = kapture.Rigs()
 
     f = open(path)
 
-    num_line = f.getline()
+    num_line = f.readline().strip()
     num_line_item = num_line.split(' ')
     num = int(num_line_item[-1])
 
-    camera_type_line = f.getline()
+    camera_type_line = f.readline().strip()
     camera_type_item = camera_type_line.split(' ')
     camera_type = camera_type_item[-1]
 
-    num_line = f.getline()
-    num_line = f.getline()
+    num_line = f.readline().strip()
+    num_line = f.readline().strip()
 
     for index in range(num):
-        line = f.getline()        
+        line = f.readline().strip()        
         [cam_id, cam_type, cam_params] = get_camera_param(camera_type, line)
 
         sensors[cam_id] = kapture.Camera(
@@ -112,39 +104,39 @@ def load_sensor_and_rigid(path: str) -> List:
         
     return [sensors, rigs]
 
-def load_image_path(path: str) -> Dict:
+def load_image_path(path: str):
     result = {}
     f = open(path)
 
-    num_line = f.getline()
+    num_line = f.readline().strip()
     num = int(num_line)
     for index in range(num):
-        line = f.getline()
+        line = f.readline().strip()
         if line[0] != '#':
             pass
         
         items = line.split(' ')
-        img_id = items[0]
+        img_id = int(items[0])
         result[img_id] = items[1]
 
     return result
 
-def load_image_info(path: str) -> Dict:
+def load_image_info(path: str):
     result = {}
     f = open(path)
 
-    num_line = f.getline()
+    num_line = f.readline().strip()
     num_line_item = num_line.split(' ')
     num = int(num_line_item[-1])
 
-    f.getline()
-    f.getline()
+    f.readline().strip()
+    f.readline().strip()
 
     for index in range(num):
-        line = f.getline()
-        items = line.split(' ')
+        line = f.readline().strip()
+        params_item = line.split(' ')
 
-        img_id = params_item[0]
+        img_id = int(params_item[0])
         cam_id = params_item[1]
         R1 = float(params_item[2])
         R2 = float(params_item[3])
@@ -165,7 +157,7 @@ def load_image_info(path: str) -> Dict:
 
 
 
-def load_image_and_trajection(image_info_path: str, image_path_path: str) -> List:
+def load_image_and_trajection(image_info_path: str, image_path_path: str):
 
     snapshots = kapture.RecordsCamera()
     trajectories = kapture.Trajectories()
@@ -174,9 +166,9 @@ def load_image_and_trajection(image_info_path: str, image_path_path: str) -> Lis
     image_path = load_image_path(image_path_path)
 
     for image_id in image_info:
-        rotation_mat = np.array([[(image_info[image_id])[1], image_info[image_id])[2], image_info[image_id])[3]],
-                                 [(image_info[image_id])[4], image_info[image_id])[5], image_info[image_id])[6]],
-                                 [(image_info[image_id])[7], image_info[image_id])[8], image_info[image_id])[9]]])
+        rotation_mat = np.array([[(image_info[image_id])[1], (image_info[image_id])[2], (image_info[image_id])[3]],
+                                 [(image_info[image_id])[4], (image_info[image_id])[5], (image_info[image_id])[6]],
+                                 [(image_info[image_id])[7], (image_info[image_id])[8], (image_info[image_id])[9]]])
         position_vec =  np.array([[(image_info[image_id])[10]],
                                   [(image_info[image_id])[11]],
                                   [(image_info[image_id])[12]]])
