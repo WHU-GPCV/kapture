@@ -26,27 +26,6 @@ from kapture.io.records import TransferAction, import_record_data_from_dir_auto
 from kapture.utils.paths import path_secure
 
 logger = logging.getLogger('gpcv')
-MODEL = kapture.CameraType.PINHOLE
-
-
-def get_camera_matrix(fx: float, fy: float, cx: float, cy: float):
-    return np.array([[fx, 0, cx],
-                     [0, fy, cy],
-                     [0, 0, 1]])
-
-
-def get_K(camera_type: kapture.CameraType, camera_params):
-    if camera_type == kapture.CameraType.UNKNOWN_CAMERA:
-        width = camera_params[0]
-        height = camera_params[1]
-        focal = 1.2 * max(width, height)
-        return get_camera_matrix(focal, focal, camera_params[0] / 2, camera_params[1] / 2)
-    elif camera_type in [kapture.CameraType.PINHOLE, kapture.CameraType.OPENCV,
-                         kapture.CameraType.OPENCV_FISHEYE, kapture.CameraType.FULL_OPENCV,
-                         kapture.CameraType.FOV, kapture.CameraType.THIN_PRISM_FISHEYE]:
-        return get_camera_matrix(camera_params[3], camera_params[4], camera_params[5], camera_params[6])
-    else:
-        return get_camera_matrix(camera_params[3], camera_params[4], camera_params[5], camera_params[5])
 
 def get_camera_param(type:str, line:str):
 
@@ -67,6 +46,7 @@ def get_camera_param(type:str, line:str):
         P2 = float(params_item[12])
 
         return [cam_id, kapture.CameraType.PINHOLE, [width, height, fx, fy, cx, cy]]
+    
     
 def load_sensor_and_rigid(path: str):
     sensors = kapture.Sensors()
@@ -104,6 +84,7 @@ def load_sensor_and_rigid(path: str):
         
     return [sensors, rigs]
 
+
 def load_image_path(path: str):
     result = {}
     f = open(path)
@@ -120,6 +101,7 @@ def load_image_path(path: str):
         result[img_id] = items[1]
 
     return result
+
 
 def load_image_info(path: str):
     result = {}
@@ -154,7 +136,6 @@ def load_image_info(path: str):
         result[img_id] = [cam_id, R1, R2, R3, R4, R5, R6, R7, R8, R9, t1, t2, t3]
 
     return result
-
 
 
 def load_image_and_trajection(image_info_path: str, image_path_path: str):
